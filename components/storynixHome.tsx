@@ -55,23 +55,23 @@ export default function StorynixHome() {
   // Options de voix disponibles
   const voiceOptions: VoiceOption[] = [
     {
-      id: 'child_female',
-      name: 'Voix enfantine féminine',
+      id: 'voix1',
+      name: 'Voix 1',
       emoji: '👧',
     },
     {
-      id: 'child_male',
-      name: 'Voix enfantine masculine',
+      id: 'voix2',
+      name: 'Voix 2',
       emoji: '👦',
     },
     {
-      id: 'adult_female',
-      name: 'Narratrice adulte',
+      id: 'voix3',
+      name: 'Voix 3',
       emoji: '👩',
     },
     {
-      id: 'adult_male',
-      name: 'Narrateur adulte',
+      id: 'voix4',
+      name: 'Voix 4',
       emoji: '👨',
     },
   ];

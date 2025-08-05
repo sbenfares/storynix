@@ -2,11 +2,31 @@
   "name": "storynix",
   "version": "0.1.0",
   "private": true,
+  "description": "Générateur d'histoires audio personnalisées pour enfants, compatibles Lunii",
+  "keywords": [
+    "lunii",
+    "stories",
+    "kids",
+    "audio",
+    "ai",
+    "typescript",
+    "nextjs"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "typecheck": "tsc --noEmit",
+    "validate": "pnpm run typecheck && pnpm run lint",
+    "clean": "rm -rf .next out node_modules/.cache",
+    "analyze": "ANALYZE=true pnpm run build",
+    "test:apis": "tsx scripts/test-apis.ts",
+    "format": "prettier --write . --ignore-path .gitignore",
+    "format:check": "prettier --check . --ignore-path .gitignore",
+    "precommit": "pnpm run validate && pnpm run format:check",
+    "postinstall": "echo '✅ Storynix dependencies installed! Run pnpm dev to start'"
   },
   "dependencies": {
     "file-saver": "^2.0.5",
@@ -21,12 +41,19 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/file-saver": "^2.0.7",
+    "@types/jszip": "^3.4.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
+    "prettier": "^3.4.2",
     "tailwindcss": "^4",
+    "tsx": "^4.20.3",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
   }
 }

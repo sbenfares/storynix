@@ -1,7 +1,13 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  eslint: {
+    rules: {
+      'react/no-unescaped-entities': 'off',
+    },
+  },
+  telemetry: {
+    disabled: true,
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

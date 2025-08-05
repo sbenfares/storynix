@@ -23,14 +23,14 @@ interface VoiceOption {
 const secureApiCall = async (url: string, options: RequestInit = {}) => {
   const token = sessionStorage.getItem('storynix_token');
 
-  const headers = {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
 
   // Ajouter le token d'authentification si disponible
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
   }
 
   return fetch(url, {
@@ -55,23 +55,23 @@ export default function StorynixHome() {
   // Options de voix disponibles
   const voiceOptions: VoiceOption[] = [
     {
-      id: 'voix1',
-      name: 'Voix 1',
+      id: 'child_female',
+      name: 'Voix enfantine féminine',
       emoji: '👧',
     },
     {
-      id: 'voix2',
-      name: 'Voix 2',
+      id: 'child_male',
+      name: 'Voix enfantine masculine',
       emoji: '👦',
     },
     {
-      id: 'voix3',
-      name: 'Voix 3',
+      id: 'adult_female',
+      name: 'Narratrice adulte',
       emoji: '👩',
     },
     {
-      id: 'voix4',
-      name: 'Voix 4',
+      id: 'adult_male',
+      name: 'Narrateur adulte',
       emoji: '👨',
     },
   ];

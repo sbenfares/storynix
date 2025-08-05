@@ -5,12 +5,6 @@ export interface Universe {
   description: string;
 }
 
-export interface Story {
-  title: string;
-  content: string;
-  chapters: string[];
-}
-
 export interface StoryRequest {
   childName: string;
   universe: string;
@@ -18,7 +12,12 @@ export interface StoryRequest {
 
 export interface AudioRequest {
   text: string;
-  voiceId?: string;
+  voiceId?:
+    | string
+    | 'child_female'
+    | 'child_male'
+    | 'narrator_female'
+    | 'narrator_male';
 }
 
 export interface StoryMetadata {
@@ -35,4 +34,17 @@ export interface ApiError {
   details?: string;
 }
 
-export type UniverseId = "pirates" | "animals" | "space" | "fairy" | "ninja";
+export type UniverseId = 'pirates' | 'animals' | 'space' | 'fairy' | 'ninja';
+
+export interface Universe {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+}
+
+export interface Story {
+  title: string;
+  content: string;
+  chapters?: string[];
+}

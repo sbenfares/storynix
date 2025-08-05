@@ -1,7 +1,6 @@
-/* eslint-disable react/no-unescaped-entities */
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Download,
   Loader2,
@@ -13,6 +12,13 @@ import {
 } from 'lucide-react';
 import { Universe, Story, UniverseId } from '@/types';
 
+// Interface pour les options de voix
+interface VoiceOption {
+  id: string;
+  name: string;
+  emoji: string;
+}
+
 export default function StorynixHome() {
   const [childName, setChildName] = useState<string>('');
   const [selectedUniverse, setSelectedUniverse] = useState<UniverseId | ''>('');
@@ -20,8 +26,35 @@ export default function StorynixHome() {
   const [generatedStory, setGeneratedStory] = useState<Story | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState<string>('child_female');
   const [error, setError] = useState<string | null>(null);
+
+  // Référence pour l'audio
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Options de voix disponibles
+  const voiceOptions: VoiceOption[] = [
+    {
+      id: 'child_female',
+      name: 'Voix enfantine féminine',
+      emoji: '👧',
+    },
+    {
+      id: 'child_male',
+      name: 'Voix enfantine masculine',
+      emoji: '👦',
+    },
+    {
+      id: 'adult_female',
+      name: 'Narratrice adulte',
+      emoji: '👩',
+    },
+    {
+      id: 'adult_male',
+      name: 'Narrateur adulte',
+      emoji: '👨',
+    },
+  ];
 
   const universes: Universe[] = [
     {
@@ -95,7 +128,10 @@ export default function StorynixHome() {
       const audioResponse = await fetch('/api/generate-audio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: story.content }),
+        body: JSON.stringify({
+          text: story.content,
+          voiceId: selectedVoice,
+        }),
       });
 
       if (!audioResponse.ok) {
@@ -125,13 +161,13 @@ export default function StorynixHome() {
     if (!audioUrl) return;
 
     if (isPlaying) {
-      audio?.pause();
+      audioRef.current?.pause();
       setIsPlaying(false);
     } else {
       const newAudio = new Audio(audioUrl);
       newAudio.onended = () => setIsPlaying(false);
       newAudio.play().catch(err => console.error('Erreur lecture audio:', err));
-      setAudio(newAudio);
+      audioRef.current = newAudio;
       setIsPlaying(true);
     }
   };
@@ -260,53 +296,81 @@ export default function StorynixHome() {
                 value={childName}
                 onChange={e => setChildName(e.target.value)}
                 placeholder="Ex: Emma, Louis, Chloé..."
-                className="w-full px-4 py-4 border-2 border-indigo-200 rounded-xl focus:border-indigo-500 focus:outline-none text-lg text-black placeholder-gray-400 font-medium transition-colors"
+                className="w-full px-4 py-4 border-2 border-indigo-200 rounded-xl focus:border-indigo-500 focus:outline-none text-lg font-medium transition-colors text-gray-800 placeholder-gray-400"
                 disabled={isGenerating}
                 maxLength={20}
               />
             </div>
 
-            {/* Univers */}
+            {/* Choix de voix */}
             <div>
               <label className="text-lg font-semibold text-gray-700 mb-4 block">
-                Choisis ton univers magique
+                🎙️ Choix de la voix
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                {universes.slice(0, 4).map(universe => (
+              <div className="space-y-2">
+                {voiceOptions.map((voice: VoiceOption) => (
                   <button
-                    key={universe.id}
-                    onClick={() =>
-                      handleUniverseSelect(universe.id as UniverseId)
-                    }
+                    key={voice.id}
+                    onClick={() => setSelectedVoice(voice.id)}
                     disabled={isGenerating}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
-                      selectedUniverse === universe.id
-                        ? 'border-indigo-500 bg-indigo-50 shadow-lg ring-2 ring-indigo-200'
-                        : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-25 hover:shadow-md'
+                    className={`w-full p-3 rounded-lg border-2 transition-all duration-200 text-left ${
+                      selectedVoice === voice.id
+                        ? 'border-indigo-500 bg-indigo-50 shadow-md'
+                        : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-25'
                     }`}
                   >
-                    <div className="text-3xl mb-2">{universe.emoji}</div>
-                    <div className="font-semibold text-gray-800">
-                      {universe.name}
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{voice.emoji}</span>
+                      <span className="font-medium text-gray-800">
+                        {voice.name}
+                      </span>
                     </div>
                   </button>
                 ))}
               </div>
-              {/* Ninja en bas */}
-              <div className="mt-3">
+            </div>
+          </div>
+
+          {/* Univers */}
+          <div className="mt-8">
+            <label className="text-lg font-semibold text-gray-700 mb-4 block">
+              Choisis ton univers magique
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              {universes.slice(0, 4).map(universe => (
                 <button
-                  onClick={() => handleUniverseSelect('ninja')}
+                  key={universe.id}
+                  onClick={() =>
+                    handleUniverseSelect(universe.id as UniverseId)
+                  }
                   disabled={isGenerating}
-                  className={`w-full p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
-                    selectedUniverse === 'ninja'
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+                    selectedUniverse === universe.id
                       ? 'border-indigo-500 bg-indigo-50 shadow-lg ring-2 ring-indigo-200'
                       : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-25 hover:shadow-md'
                   }`}
                 >
-                  <div className="text-3xl mb-2">🥷</div>
-                  <div className="font-semibold text-gray-800">Ninja</div>
+                  <div className="text-3xl mb-2">{universe.emoji}</div>
+                  <div className="font-semibold text-gray-800">
+                    {universe.name}
+                  </div>
                 </button>
-              </div>
+              ))}
+            </div>
+            {/* Ninja en bas */}
+            <div className="mt-3">
+              <button
+                onClick={() => handleUniverseSelect('ninja')}
+                disabled={isGenerating}
+                className={`w-full p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+                  selectedUniverse === 'ninja'
+                    ? 'border-indigo-500 bg-indigo-50 shadow-lg ring-2 ring-indigo-200'
+                    : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-25 hover:shadow-md'
+                }`}
+              >
+                <div className="text-3xl mb-2">🥷</div>
+                <div className="font-semibold text-gray-800">Ninja</div>
+              </button>
             </div>
           </div>
 
@@ -322,8 +386,8 @@ export default function StorynixHome() {
                   <Loader2 className="animate-spin" size={28} />
                   <span>
                     {!generatedStory
-                      ? 'Création de l&apos;histoire...'
-                      : 'Génération de l&apos;audio...'}
+                      ? 'Histoire en cours de création...'
+                      : 'Audio en cours de création...'}
                   </span>
                 </div>
               ) : (
@@ -384,7 +448,7 @@ export default function StorynixHome() {
                   className="flex items-center gap-3 mx-auto px-8 py-4 bg-green-500 text-white font-bold text-lg rounded-xl hover:bg-green-600 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-                  {isPlaying ? 'Mettre en pause' : 'Écouter l&apos;histoire'}
+                  {isPlaying ? 'Mettre en pause' : 'Écouter'}
                 </button>
               </div>
             )}

@@ -19,6 +19,26 @@ interface VoiceOption {
   emoji: string;
 }
 
+// Utilitaire pour les appels API sécurisés
+const secureApiCall = async (url: string, options: RequestInit = {}) => {
+  const token = sessionStorage.getItem('storynix_token');
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+
+  // Ajouter le token d'authentification si disponible
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return fetch(url, {
+    ...options,
+    headers,
+  });
+};
+
 export default function StorynixHome() {
   const [childName, setChildName] = useState<string>('');
   const [selectedUniverse, setSelectedUniverse] = useState<UniverseId | ''>('');
@@ -101,11 +121,11 @@ export default function StorynixHome() {
     setError(null);
 
     try {
-      // 1. Générer l'histoire avec ChatGPT
+      // 1. Générer l'histoire avec appel sécurisé
       console.log("🎬 Génération de l'histoire...");
-      const storyResponse = await fetch('/api/generate-story', {
+
+      const storyResponse = await secureApiCall('/api/generate-story', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           childName: childName.trim(),
           universe: selectedUniverse,
@@ -113,9 +133,12 @@ export default function StorynixHome() {
       });
 
       if (!storyResponse.ok) {
-        const errorData = await storyResponse.json();
+        const errorData = await storyResponse
+          .json()
+          .catch(() => ({ error: 'Erreur de connexion' }));
         throw new Error(
-          errorData.error || "Erreur lors de la génération de l'histoire"
+          errorData.error ||
+            `Erreur ${storyResponse.status}: ${storyResponse.statusText}`
         );
       }
 
@@ -123,11 +146,11 @@ export default function StorynixHome() {
       setGeneratedStory(story);
       console.log('✅ Histoire générée:', story.title);
 
-      // 2. Générer l'audio avec ElevenLabs
+      // 2. Générer l'audio avec appel sécurisé
       console.log("🎵 Génération de l'audio...");
-      const audioResponse = await fetch('/api/generate-audio', {
+
+      const audioResponse = await secureApiCall('/api/generate-audio', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: story.content,
           voiceId: selectedVoice,
@@ -135,7 +158,9 @@ export default function StorynixHome() {
       });
 
       if (!audioResponse.ok) {
-        const errorData = await audioResponse.json();
+        const errorData = await audioResponse
+          .json()
+          .catch(() => ({ error: 'Erreur audio' }));
         throw new Error(
           errorData.error || 'Erreur lors de la génération audio'
         );
@@ -147,11 +172,19 @@ export default function StorynixHome() {
       console.log('✅ Audio généré avec succès');
     } catch (error) {
       console.error('❌ Erreur:', error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : 'Une erreur inconnue est survenue'
-      );
+
+      // Gestion spécifique de l'erreur 401 (non autorisé)
+      if (error instanceof Error && error.message.includes('401')) {
+        setError(
+          'Session expirée. Veuillez rafraîchir la page et vous reconnecter.'
+        );
+      } else {
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'Une erreur inconnue est survenue'
+        );
+      }
     } finally {
       setIsGenerating(false);
     }

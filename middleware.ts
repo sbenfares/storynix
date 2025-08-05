@@ -1,15 +1,36 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+// middleware.ts
+import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Protéger les routes API sensibles
-  if (request.nextUrl.pathname.startsWith('/api/generate-')) {
-    const authHeader = request.headers.get('authorization');
-    const validApiKey = process.env.STORYNIX_API_KEY;
+  const { pathname } = request.nextUrl;
 
-    // Vérifier la clé API interne
-    if (!authHeader || authHeader !== `Bearer ${validApiKey}`) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+  // Laisser passer les routes système Next.js
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/favicon.ico') ||
+    pathname === '/api/auth'
+  ) {
+    // Route d'authentification ouverte
+    return NextResponse.next();
+  }
+
+  // 🔒 PROTÉGER LES APIS SENSIBLES
+  if (
+    pathname.startsWith('/api/generate-story') ||
+    pathname.startsWith('/api/generate-audio')
+  ) {
+    const accessCode = process.env.STORYNIX_ACCESS_CODE;
+
+    if (accessCode) {
+      const authHeader = request.headers.get('authorization');
+
+      if (!authHeader || authHeader !== `Bearer ${accessCode}`) {
+        console.log("🚫 Tentative d'accès non autorisée à:", pathname);
+        return NextResponse.json(
+          { error: 'Accès non autorisé' },
+          { status: 401 }
+        );
+      }
     }
   }
 
@@ -17,5 +38,8 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/generate-:path*'],
+  matcher: [
+    // Matcher toutes les routes sauf les fichiers statiques
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 };

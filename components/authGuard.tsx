@@ -16,8 +16,11 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   // Vérifier si déjà authentifié au chargement
   useEffect(() => {
-    const authToken = sessionStorage.getItem('storynix_auth');
-    if (authToken === 'authenticated') {
+    const authStatus = sessionStorage.getItem('storynix_auth');
+    const authToken = sessionStorage.getItem('storynix_token');
+
+    // Utilisateur authentifié seulement si les deux sont présents
+    if (authStatus === 'authenticated' && authToken) {
       setIsAuthenticated(true);
     }
   }, []);
@@ -37,16 +40,26 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // Stocker BOTH l'état d'authentification ET le token
         sessionStorage.setItem('storynix_auth', 'authenticated');
+        sessionStorage.setItem('storynix_token', password); // Le token = le code d'accès
         setIsAuthenticated(true);
       } else {
         setError(data.message || 'Mot de passe incorrect');
+        setPassword(''); // Vider le champ en cas d'erreur
       }
     } catch (error) {
       setError('Erreur de connexion. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Fonction utilitaire pour déconnecter (optionnel)
+  const logout = () => {
+    sessionStorage.removeItem('storynix_auth');
+    sessionStorage.removeItem('storynix_token');
+    setIsAuthenticated(false);
   };
 
   if (isAuthenticated) {
@@ -85,6 +98,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 text-black focus:outline-none text-lg transition-colors pr-12"
                 disabled={isLoading}
                 required
+                autoFocus
               />
               <button
                 type="button"

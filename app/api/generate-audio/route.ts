@@ -39,7 +39,7 @@ function applyPronunciationGuide(text: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body: AudioRequest = await request.json();
-    const { text, voiceId = 'child_female' } = body; // Utiliser la clé au lieu de l'ID direct
+    const { text, voiceId = 'Z9ZHGvFZ90R0h0x1prsJ' } = body; // Utiliser la clé au lieu de l'ID direct
 
     // Validation des entrées
     if (!text || text.trim().length === 0) {

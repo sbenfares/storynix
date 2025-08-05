@@ -12,12 +12,7 @@ export interface StoryRequest {
 
 export interface AudioRequest {
   text: string;
-  voiceId?:
-    | string
-    | 'child_female'
-    | 'child_male'
-    | 'narrator_female'
-    | 'narrator_male';
+  voiceId?: string | 'voix1' | 'voix2' | 'voix3' | 'voix4'; // Utiliser les clés des voix disponibles
 }
 
 export interface StoryMetadata {
